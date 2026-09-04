@@ -42,3 +42,14 @@ docker build -t image-upload .
 - `AWS_REGION` — default `us-east-1`
 - `S3_BUCKET_NAME` — private bucket name
 - Credentials come from the IAM role (ECS) or local AWS config — do not put access keys in env.
+
+## Infrastructure (Terraform)
+
+```bash
+cd terraform
+terraform init
+terraform plan
+terraform apply
+```
+
+Creates VPC, private S3, ECR, ECS Fargate + ALB, ACM cert, Route53 `upload.briefly-learn.com`, and a GitHub Actions OIDC deploy role. ECS `desired_count` starts at `0` until an image is pushed (next: CI/CD).
