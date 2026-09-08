@@ -36,6 +36,16 @@ export async function uploadObject(
   );
 }
 
+export async function getObject(key: string) {
+  const client = getS3Client();
+  return client.send(
+    new GetObjectCommand({
+      Bucket: getBucketName(),
+      Key: key,
+    }),
+  );
+}
+
 export type ListedImage = {
   key: string;
   url: string;

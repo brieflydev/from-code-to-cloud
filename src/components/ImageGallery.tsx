@@ -31,20 +31,14 @@ type ImageGalleryProps = {
   error: string | null;
 };
 
-async function downloadImage(image: GalleryImage) {
-  const response = await fetch(image.url);
-  if (!response.ok) {
-    throw new Error("Download failed");
-  }
-  const blob = await response.blob();
-  const objectUrl = URL.createObjectURL(blob);
+function downloadImage(image: GalleryImage) {
+  // Same-origin API avoids S3 CORS blocking browser fetch of signed URLs.
   const anchor = document.createElement("a");
-  anchor.href = objectUrl;
+  anchor.href = `/api/download?key=${encodeURIComponent(image.key)}`;
   anchor.download = image.key;
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
-  URL.revokeObjectURL(objectUrl);
 }
 
 export default function ImageGallery({
@@ -135,11 +129,11 @@ export default function ImageGallery({
                     <IconButton
                       sx={{ color: "rgba(255, 255, 255, 0.9)" }}
                       aria-label={`Download ${image.key}`}
-                      onClick={async (event) => {
+                      onClick={(event) => {
                         event.stopPropagation();
                         try {
                           setDownloadError(null);
-                          await downloadImage(image);
+                          downloadImage(image);
                         } catch {
                           setDownloadError(`Could not download ${image.key}`);
                         }
@@ -184,10 +178,10 @@ export default function ImageGallery({
                 <Tooltip title="Download">
                   <IconButton
                     aria-label="Download image"
-                    onClick={async () => {
+                    onClick={() => {
                       try {
                         setDownloadError(null);
-                        await downloadImage(preview);
+                        downloadImage(preview);
                       } catch {
                         setDownloadError(`Could not download ${preview.key}`);
                       }
