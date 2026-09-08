@@ -54,9 +54,13 @@ resource "aws_iam_role_policy" "ecs_task_s3" {
 
 # GitHub Actions OIDC — trust brieflydev/from-code-to-cloud
 resource "aws_iam_openid_connect_provider" "github" {
-  url             = "https://token.actions.githubusercontent.com"
-  client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = ["ffffffffffffffffffffffffffffffffffffffff"]
+  url            = "https://token.actions.githubusercontent.com"
+  client_id_list = ["sts.amazonaws.com"]
+  # AWS trusts GitHub's CA roots; thumbprints kept for provider API compatibility.
+  thumbprint_list = [
+    "6938fd4d98bab03faadb97b34396831e3780aea1",
+    "1c58a3a8518e8759bf075b76b750d4c4fa5eac1d",
+  ]
 
   tags = local.common_tags
 }
@@ -79,11 +83,7 @@ data "aws_iam_policy_document" "github_actions_assume" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values = [
-        "repo:${var.github_org}/${var.github_repo}:ref:refs/heads/main",
-        "repo:${var.github_org}/${var.github_repo}:environment:*",
-        "repo:${var.github_org}/${var.github_repo}:workflow:*",
-      ]
+      values   = ["repo:${var.github_org}/${var.github_repo}:*"]
     }
   }
 }
