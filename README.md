@@ -52,4 +52,8 @@ terraform plan
 terraform apply
 ```
 
-Creates VPC, private S3, ECR, ECS Fargate + ALB, ACM cert, Route53 `upload.briefly-learn.com`, and a GitHub Actions OIDC deploy role. ECS `desired_count` starts at `0` until an image is pushed (next: CI/CD).
+Creates VPC, private S3, ECR, ECS Fargate + ALB, ACM cert, Route53 `upload.briefly-learn.com`, and a GitHub Actions OIDC deploy role. ECS `desired_count` starts at `0` until an image is pushed.
+
+## CI/CD
+
+Push to `main` (or run **Build and Deploy** via `workflow_dispatch`) builds the Docker image in GitHub Actions, pushes it to ECR, and deploys to ECS with `desired_count=1` using OIDC (no long-lived AWS keys).
