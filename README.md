@@ -2,6 +2,10 @@
 
 Simple Next.js app to upload images to a private S3 bucket and browse them via short-lived signed URLs. UI is Material UI. No app-level auth.
 
+Gallery viewing uses S3 presigned GET URLs; downloads go through a same-origin `/api/download` route to avoid browser CORS issues with S3.
+
+> **Note:** Workshop live infra (including `upload.briefly-learn.com`) was torn down after the session. To run this yourself, apply Terraform in your own AWS account, update the GitHub Actions workflow env values, then push to deploy.
+
 ## Local development
 
 1. Copy env file and set your bucket name:
@@ -28,10 +32,11 @@ Open [http://localhost:3000](http://localhost:3000).
 | `GET` | `/api/health` | Health check |
 | `POST` | `/api/upload` | Multipart upload (`file` field) |
 | `GET` | `/api/images` | List objects + presigned GET URLs |
+| `GET` | `/api/download?key=` | Stream object as attachment (same-origin download) |
 
 ## Docker
 
-Image is multi-stage with Next.js `standalone` output. Build/run will be verified in GitHub Actions (local Docker run is not required on this machine).
+Image is multi-stage with Next.js `standalone` output. Build/run is verified in GitHub Actions.
 
 ```bash
 docker build -t image-upload .
@@ -52,7 +57,20 @@ terraform plan
 terraform apply
 ```
 
-Creates VPC, private S3, ECR, ECS Fargate + ALB, ACM cert, Route53 `upload.briefly-learn.com`, and a GitHub Actions OIDC deploy role. ECS `desired_count` starts at `0` until an image is pushed.
+Creates VPC, private S3, ECR, ECS Fargate + ALB, ACM cert, Route53 subdomain (default `upload.briefly-learn.com`), and a GitHub Actions OIDC deploy role. ECS `desired_count` starts at `0` until an image is pushed.
+
+Update [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) with your account’s role ARN / ECR / ECS names from Terraform outputs before relying on CI.
+
+### Teardown
+
+Empty the uploads bucket (it has no `force_destroy`), then:
+
+```bash
+cd terraform
+terraform destroy
+```
+
+Also delete any local-only test buckets you created outside Terraform.
 
 ## CI/CD
 
